@@ -22,6 +22,8 @@ class MyAppState extends State<MyApp> {
   initState() {
     // ignore: avoid_print
     print("initState Called");
+    debugPrint("initState Called");
+
     _tagRead();
   }
 
@@ -64,15 +66,28 @@ class MyAppState extends State<MyApp> {
   }
 
   void _tagRead() {
-    NfcManager.instance.startSession(onDiscovered: (NfcTag tag) async {
-      var tagValue = String.fromCharCodes(tag.data["ndef"]["cachedMessage"]["records"][0]["payload"]).substring(3);
-      result.value = tagValue;
-      print(tagValue);
-      String url = "https://docs.google.com/forms/d/e/1FAIpQLSePo4vcbVDYyjC0I585RkLTeJAtGoRO11idP0404labEO7u1Q/formResponse?usp=pp_url&entry.960852383="+tagValue+"&submit=Submit";
-      final response = await http.get(Uri.parse(url));
-      // var responseData = json.decode(response.body);
-      // print(res);
-      // NfcManager.instance.stopSession();
+    print("_tagRead()");
+    NfcManager.instance.startSession(pollingOptions: {NfcPollingOption.iso14443, NfcPollingOption.iso15693},onDiscovered: (NfcTag tag) async {
+      try{
+        print(tag.data);
+      
+      if(tag.data["ndef"]["cachedMessage"] != null){
+        var tagValue = String.fromCharCodes(tag.data["ndef"]["cachedMessage"]["records"][0]["payload"]).substring(3);
+        result.value = tagValue;
+        print(tagValue);
+        String url = "https://docs.google.com/forms/d/e/1FAIpQLSePo4vcbVDYyjC0I585RkLTeJAtGoRO11idP0404labEO7u1Q/formResponse?usp=pp_url&entry.960852383="+tagValue+"&submit=Submit";
+        final response = await http.get(Uri.parse(url));
+        // var responseData = json.decode(response.body);
+        // print(res);
+        NfcManager.instance.stopSession();
+      }
+      }
+      catch(e){
+        print("------");
+        print(e);
+      }
+      
+
     });
   }
 
